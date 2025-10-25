@@ -13,9 +13,10 @@
     mqtt_client_password: "{{ MQTT_BROKER_PASSWORD }}"
 
   tasks:
-    - name: Install pip, virtualenv, and tcpreplay if not already installed
+    - name: Install iptables, pip, virtualenv, and tcpreplay if not already installed
       apt:
         name:
+          - iptables
           - python3-pip
           - python3-venv
           - tcpreplay

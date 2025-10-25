@@ -1,0 +1,22 @@
+- name: Distributes a traffic tracks on all the probes
+  hosts: probes
+  become: true
+  become_user: "{{ ansible_user }}"
+  vars: 
+    local_pcap_path: "/../tracks_to_distribute"
+    remote_pcap_path: "~/measure-x/probesFirmware/coexModule/pcap"
+  tasks:
+    # Added this first search to distribute more files in 1 time
+    - name: Find all .pcap files in the local_pcap_path
+      ansible.builtin.find:
+        paths: "{{local_pcap_path}}"
+      register: files_to_copy
+
+    - name: Distribute the tracks
+      ansible.builtin.copy:
+        src: "{{item.path}}"
+        dest: "{{remote_pcap_path}}/{{item.path | basename}}" #jinja2 filter
+        owner: measurex
+        group: measurex
+        mode: '0644'
+      loop: "{{files_to_copy.files}}"
