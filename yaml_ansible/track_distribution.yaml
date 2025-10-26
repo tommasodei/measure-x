@@ -15,7 +15,7 @@
     - name: Distribute the tracks
       ansible.builtin.copy:
         src: "{{item.path}}"
-        dest: "{{remote_pcap_path}}/{{item.path | basename}}" #jinja2 filter
+        dest: "{{remote_pcap_path}}/{{item.path | basename}}"
         owner: measurex
         group: measurex
         mode: '0644'
