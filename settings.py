@@ -19,6 +19,11 @@ subprocess.run(['docker-compose', 'up', '-d', '--build'])
 input("Press Enter to create the MongoDB measurex user")
 
 #Creation of measurex user on mongo
-subprocess.run('docker exec measure-x-mongo mongosh admin --eval "db.createUser({{ user: \'measurex\', pwd: \'{password}\', roles: [{{ role: \'readWrite\', db: \'measurex\' }}] }})"', shell=True)
+subprocess.run([
+    "docker", "exec", "measure-x-mongo",
+    "mongosh", "admin",
+    "--eval",
+    f'db.createUser({{ user: "measurex", pwd: "{password}", roles: [{{ role: "readWrite", db: "measurex" }}] }})'
+])
 
 print("MongoDB user created successfully!")
