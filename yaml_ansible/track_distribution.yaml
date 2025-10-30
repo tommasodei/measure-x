@@ -1,22 +1,25 @@
-- name: Distributes a traffic tracks on all the probes
+- name: Distribute traffic tracks on all the probes
   hosts: probes
-  become: true
-  become_user: "{{ ansible_user }}"
-  vars: 
-    local_pcap_path: "/../tracks_to_distribute"
-    remote_pcap_path: "~/measure-x/probesFirmware/coexModule/pcap"
-  tasks:
-    # Added this first search to distribute more files in 1 time
-    - name: Find all .pcap files in the local_pcap_path
-      ansible.builtin.find:
-        paths: "{{local_pcap_path}}"
-      register: files_to_copy
+  vars:
+    local_tracks_path: "{{ (playbook_dir + '/../tracks_to_distribute') | realpath }}"
+    remote_tracks_path: "~/measureX/probesFirmware/coexModule/pcap"
 
-    - name: Distribute the tracks
-      ansible.builtin.copy:
-        src: "{{item.path}}"
-        dest: "{{remote_pcap_path}}/{{item.path | basename}}"
+  tasks:
+    - name: Find all the files to distribute
+      find:
+        paths: "{{ local_tracks_path }}"
+        recurse: no
+      register: local_files
+      delegate_to: localhost
+      run_once: true
+
+    - name: Copy all the found files to all the probes
+      copy:
+        src: "{{ item.path }}"
+        dest: "{{ remote_tracks_path }}/{{ item.path | basename }}"
         owner: measurex
         group: measurex
         mode: '0644'
-      loop: "{{files_to_copy.files}}"
+      loop: "{{ local_files.files }}"
+      become: true
+      become_user: "{{ ansible_user }}"
