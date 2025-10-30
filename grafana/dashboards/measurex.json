@@ -1,0 +1,324 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "name": "Measure-X-Mongo",
+        "type": "haohanyang-mongodb-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Average_Throughput",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "always",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "Average Throughput",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "Mbits"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "collection": "measurements",
+          "queryLanguage": "json",
+          "queryText": "[\n  {\n    \"$match\": {\n        \"$expr\": {\n            \"$and\": [\n              {\n                \"$gt\": [\"$start_time\", {\"$divide\": [{ \"$toLong\": \"$__from\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$start_time\", {\"$divide\": [{ \"$toLong\": \"$__to\" },1000]}]\n              },\n              {\n                \"$gt\": [\"$stop_time\", {\"$divide\": [{ \"$toLong\": \"$__from\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$stop_time\", {\"$divide\": [{ \"$toLong\": \"$__to\" },1000]}]\n              },\n              {\n                \"$lt\": [\"$start_time\", \"$stop_time\"]\n              },\n              {  \n                \"$eq\": [\"$type\", \"iperf\"]\n              }\n            ]\n        }\n    }\n  },\n  {\n    \"$lookup\": {\n        \"from\": \"results\",\n        \"localField\": \"results\",\n        \"foreignField\": \"_id\",\n        \"as\": \"resultsData\"\n    }\n  },\n  {\n    \"$unwind\": \"$resultsData\"\n  },\n  {\n    \"$project\": {\n        \"_id\": 0,\n        \"time\": {\"$toDate\": {\"$multiply\": [\"$start_time\", 1000]}},\n        \"avg_speed\": \"$resultsData.avg_speed\"\n    }\n  },\n  {\n    \"$sort\": {\"time\": 1}\n  }\n]",
+          "queryType": "table",
+          "refId": "A"
+        }
+      ],
+      "title": "Throughput Measurements",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "name": "Measure-X-Mongo",
+        "type": "haohanyang-mongodb-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Average_RTT",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "always",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "collection": "measurements",
+          "queryLanguage": "json",
+          "queryText": "[\n  {\n    \"$match\": {\n        \"$expr\": {\n            \"$and\": [\n              {\n                \"$gt\": [\"$start_time\", {\"$divide\": [{ \"$toLong\": \"$__from\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$start_time\", {\"$divide\": [{ \"$toLong\": \"$__to\" },1000]}]\n              },\n              {\n                \"$gt\": [\"$stop_time\", {\"$divide\": [{ \"$toLong\": \"$__from\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$stop_time\", {\"$divide\": [{ \"$toLong\": \"$__to\" },1000]}]\n              },\n              {\n                \"$lt\": [\"$start_time\", \"$stop_time\"]\n              },\n              { \n                \"$eq\": [\"$type\", \"ping\"]\n              }\n            ]\n        }\n    }\n  },\n  {\n    \"$lookup\": {\n        \"from\": \"results\",\n        \"localField\": \"results\",\n        \"foreignField\": \"_id\",\n        \"as\": \"resultsData\"\n    }\n  },\n  {\n    \"$unwind\": \"$resultsData\"\n  },\n  {\n    \"$project\": {\n        \"_id\": 0,\n        \"time\": {\"$toDate\": {\"$multiply\": [\"$start_time\", 1000]}},\n        \"rtt_avg\": \"$resultsData.rtt_avg\"\n    }\n  },\n  {\n    \"$sort\": {\"time\": 1}\n  }\n]",
+          "queryType": "table",
+          "refId": "A"
+        }
+      ],
+      "title": "Latency Measurements",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "name": "Measure-X-Mongo",
+        "type": "haohanyang-mongodb-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "Max_AoI",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "always",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "displayName": "max_aoi",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.2.1",
+      "targets": [
+        {
+          "collection": "measurements",
+          "queryLanguage": "json",
+          "queryText": "[\n  {\n    \"$match\": {\n        \"$expr\": {\n            \"$and\": [\n              {\n                \"$gt\": [\"$start_time\", {\"$divide\": [{ \"$toLong\": \"$__from\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$start_time\", {\"$divide\": [{ \"$toLong\": \"$__to\" },1000]}]\n              },\n              {\n                \"$gt\": [\"$stop_time\", {\"$divide\": [{ \"$toLong\": \"$__from\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$stop_time\", {\"$divide\": [{ \"$toLong\": \"$__to\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$start_time\", \"$stop_time\"]\n              },\n              {\n                \"$eq\": [\"$type\", \"aoi\"]\n              }\n            ]\n        }\n    }\n  },\n  {\n    \"$lookup\": {\n        \"from\": \"results\",\n        \"localField\": \"results\",\n        \"foreignField\": \"_id\",\n        \"as\": \"resultsData\"\n    }\n  },\n  {\n    \"$unwind\": \"$resultsData\"\n  },\n  {\n    \"$project\": {\n        \"_id\": 0,\n        \"time\": {\"$toDate\": {\"$multiply\": [\"$start_time\", 1000]}},\n        \"max_aoi\": \"$resultsData.max\"\n    }\n  },\n  {\n    \"$sort\": {\"time\": 1}\n  }\n]",
+          "queryType": "table",
+          "refId": "A"
+        }
+      ],
+      "title": "AoI Measurements",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 42,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "MeasureX",
+  "uid": null,
+  "version": 1
+}
