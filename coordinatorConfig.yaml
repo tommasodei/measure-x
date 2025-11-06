@@ -6,3 +6,4 @@ mongo:
   db_name: measurex
   measurements_collection_name: measurements
   results_collection_name: results
+  contexts_collection_name: contexts

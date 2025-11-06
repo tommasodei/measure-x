@@ -13,7 +13,7 @@ with open('coordinatorConfig.yaml', 'r') as f:
 with open('coordinatorConfig.yaml', 'w') as f:
     f.write(content)
 
-#Started both mongo and grafana containers
+#Starting of both mongo and grafana containers
 subprocess.run(['docker-compose', 'up', '-d', '--build'])
 
 input("Press Enter to create the MongoDB measurex user")
