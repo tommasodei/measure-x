@@ -74,6 +74,19 @@
         group: "{{ ansible_user }}"
         mode: '0644'
     
+    - name: Copy serial port configuration
+      template:
+        src: serial_port_configuration.j2
+        dest: /etc/udev/rules.d/99-mhi.rules
+        owner: "root"
+        group: "root"
+        mode: '0644'
+    
+    - name: Reload of udev rules
+      ansible.builtin.command:
+        cmd: sudo udevadm control --reload-rules
+        cmd: sudo udevadm trigger
+       
     - name: Copy the mosquitto.crt file
       copy:
         src: mosquitto.crt

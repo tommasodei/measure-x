@@ -1,82 +1,166 @@
 import serial
 import time
+from datetime import datetime
+
 
 class ContextController:
-    
+
     def __init__(self, port="/dev/mhi_DUN", baudrate=115200, timeout=1.5):
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
         self.serial = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout)
-        
+
+
     def send_at(self, cmd, timeout=2.0):
         """
-        Send an AT command and return full response as text
+        Send an AT command and return all lines until OK/ERROR.
         """
         try:
-            at_cmd = (cmd + "\r").encode()
+            full_cmd = (cmd + "\r").encode()
             self.serial.reset_input_buffer()
-            self.serial.write(at_cmd)
-            
+            self.serial.write(full_cmd)
+
             end_time = time.time() + timeout
             lines = []
-            
+
             while time.time() < end_time:
                 line = self.serial.readline().decode(errors="ignore").strip()
                 if line:
                     lines.append(line)
                     if line == "OK" or line.startswith("ERROR"):
                         break
-                        
-            print(lines)
+
             return "\n".join(lines)
+
         except Exception as e:
             print(f"ContextModule ERROR sending AT '{cmd}': {e}")
             return ""
-    
+
+
     def extract(self, raw, prefix):
-        """
-        Return first line starting with prefix
-        """
-        for line in raw.splitlines():
-            if line.strip().startswith(prefix):
-                return line.strip()
+        for l in raw.splitlines():
+            if l.strip().startswith(prefix):
+                return l.strip()
         return None
-    
+
+
     def parse_qeng_servingcell(self, raw):
-        """
-        Example (LTE):
-        +QENG: "servingcell","NOCONN","LTE","FDD",22201,51,165,6300,3,20,20,2,8,8,-95,-10,-5,14,15
-        """
-        line = self.extract(raw, "+QENG:")
-        if not line:
+        lines = [l.strip() for l in raw.splitlines() if l.strip().startswith("+QENG:")]
+
+        if len(lines) == 0:
             return {}
 
-        parts = line.split(",")
+        if any('"NR5G-NSA"' in l for l in lines) and any('"LTE"' in l for l in lines):
 
-        try:
-            return {
-                "rat": parts[2].replace('"', ''),
-                "mode": parts[3].replace('"', ''),
-                "plmn": parts[4],
-                "tac": int(parts[5]),
-                "cell_id": int(parts[6]),
-                "pci": int(parts[7]),
-                "arfcn": int(parts[8]),
-                "bandwidth": parts[9],
-                "rsrp": int(parts[-5]),
-                "rsrq": int(parts[-4]),
-                "rssi": int(parts[-3]),
-                "sinr": int(parts[-2]),
-                "cqi": int(parts[-1]),
-            }
-        except Exception:
-            return {}
+            lte_line = next(l for l in lines if '"LTE"' in l)
+            nr_line = next(l for l in lines if '"NR5G-NSA"' in l)
+
+            l = lte_line.split(",")
+            n = nr_line.split(",")
+            try:
+                return {
+                    "rat": "NR5G",
+                    "mode": "NSA",
+                    # LTE part
+                    "cell_id": l[4],
+                    # NR
+                    "plmn": n[1] + n[2],
+                    "pci": int(n[3]),
+                    "rsrp": int(n[4]),
+                    "sinr": int(n[5]),
+                    "rsrq": int(n[6]),
+                    "arfcn": int(n[7]),
+                    "band": n[8],
+                    "bandwidth": n[9],
+                    "cqi": None,
+                    "tac": None
+                }
+            except Exception:
+                #Debug
+                #print("Eccezione")
+                return {}
+
+        if any('"NR5G-SA"' in l for l in lines):
+
+            line = next(l for l in lines if '"NR5G-SA"' in l)
+            p = line.split(",")
+
+            try:
+                return {
+                    "rat": "NR5G",
+                    "mode": "SA",
+                    "plmn": p[4] + p[5],
+                    "cell_id": int(p[6]),
+                    "pci": int(p[7]),
+                    "tac": int(p[8]),
+                    "arfcn": int(p[9]),
+                    "band": p[10],
+                    "bandwidth": p[11],
+                    "rsrp": int(p[12]),
+                    "rsrq": int(p[13]),
+                    "sinr": int(p[14]),
+                    "cqi": None,
+                }
+            except Exception:
+                #Debug
+                #print("Eccezione")
+                return {}
+
+        if any('"LTE"' in l for l in lines):
+
+            line = next(l for l in lines if '"LTE"' in l)
+            p = line.split(",")
+
+            try:
+                return {
+                    "rat": "LTE",
+                    "mode": p[3].replace('"', ''),
+                    "plmn": p[4] + p[5],
+                    "cell_id": int(p[6]),
+                    "pci": int(p[7]),
+                    "arfcn": int(p[8]),
+                    "band": p[9],
+                    "bandwidth": p[11],
+                    "tac": int(p[12]),
+                    "rsrp": int(p[13]),
+                    "rsrq": int(p[14]),
+                    "sinr": int(p[16]),
+                    "cqi": int(p[17])
+                }
+            except Exception:
+                #Debug
+                #print("Eccezione")
+                return {}
+        
+        if any('"WCDMA"' in l for l in lines):
+
+            line = next(l for l in lines if '"WCDMA"' in l)
+            p = line.split(",")
+
+            try:
+                return {
+                    "rat": "WCDMA",
+                    "mode": None,
+                    "plmn": p[3] + p[4],
+                    "cell_id": int(p[6]),
+                    "pci": int(p[8]),
+                    "arfcn": int(p[7]),
+                    "band": None,
+                    "bandwidth": None,
+                    "tac": int(p[5]),
+                    "rsrp": int(p[10]),
+                    "rsrq": int(p[11]),
+                    "sinr": None,
+                    "cqi": None
+                }
+            except Exception:
+                #Debug
+                #print("Eccezione")
+                return {}
+
 
     def parse_qnwinfo(self, raw):
-        """
-        +QNWINFO: "FDD LTE","TIM IT","LTE BAND 3",1300
-        """
         line = self.extract(raw, "+QNWINFO:")
         if not line:
             return {}
@@ -84,85 +168,75 @@ class ContextController:
         try:
             items = line.split(":", 1)[1].split(",")
             return {
-                "rat": items[0].replace('"', '').strip(),
                 "operator_name": items[1].replace('"', '').strip(),
                 "band": items[2].replace('"', '').strip(),
             }
         except Exception:
             return {}
 
+
     def parse_cops(self, raw):
-        """
-        +COPS: 0,0,"TIM",7
-        """
         line = self.extract(raw, "+COPS:")
         if not line:
             return {}
 
         try:
             fields = line.split(",")
-            operator = fields[2].replace('"', "")
-            return {"operator_name": operator}
+            return {"operator_name": fields[2].replace('"', "")}
         except Exception:
             return {}
-    
+
+
     def parse_csq(self, raw):
-        """
-        +CSQ: 15,99
-        RSSI = (value * 2 - 113) dBm
-        """
         line = self.extract(raw, "+CSQ:")
         if not line:
             return {}
 
         try:
-            rssi_raw = int(line.split(":")[1].split(",")[0])
-            if rssi_raw == 99:
-                rssi = None
-            else:
-                rssi = rssi_raw * 2 - 113
-            return {"rssi": rssi}
+            rssi = int(line.split(":")[1].split(",")[0])
+            ber = int(line.split(":")[1].split(",")[1])
+            return {
+                "rssi": "Not known or not detectable" if rssi == 99 else rssi * 2 - 113,
+                "ber": "Not known or not detectable" if ber == 99 else ber
+                }
         except Exception:
             return {}
-    
+
+
     def parse_creg(self, raw):
-        """
-        Parse registration state from +CREG response
-        Example: +CREG: 0,1
-        """
         if "+CREG:" not in raw:
             return {}
+
         try:
             state = raw.split(",")[-1].strip()
             return {"connection_state": state}
         except Exception:
             return {"connection_state": None}
 
-        
-    def read_context(self, msm_id):
-        """
-        Creation of the context
-        """
-        context = {"msm_id": msm_id}
-        
-        # Serving cell info
-        qeng = self._send_at("AT+QENG=\"servingcell\"")
-        context.update(self._parse_qeng_servingcell(qeng))
 
-        # RAT/Operator/Band
-        qnw = self._send_at("AT+QNWINFO")
-        context.update(self._parse_qnwinfo(qnw))
+    def read_context(self, msm_id):
+        ctx = {"msm_id": msm_id}
+        
+        # Serving cell
+        qeng = self.send_at('AT+QENG="servingcell"')
+        ctx.update(self.parse_qeng_servingcell(qeng))
+        print(ctx)
+
+        # Info RAT + operator
+        qnw = self.send_at("AT+QNWINFO")
+        ctx.update(self.parse_qnwinfo(qnw))
 
         # Operator name
         cops = self.send_at("AT+COPS?")
-        context.update(self.parse_cops(cops))
+        ctx.update(self.parse_cops(cops))
 
         # RSSI fallback
-        csq = self._send_at("AT+CSQ")
-        context.update(self._parse_csq(csq))
+        csq = self.send_at("AT+CSQ")
+        ctx.update(self.parse_csq(csq))
 
-        # Connection registration state
-        creg = self._send_at("AT+CREG?")
-        context.update(self._parse_creg(creg))
-
-        return context
+        # Registration
+        creg = self.send_at("AT+CREG?")
+        ctx.update(self.parse_creg(creg))
+        print(ctx) 
+        
+        return ctx
