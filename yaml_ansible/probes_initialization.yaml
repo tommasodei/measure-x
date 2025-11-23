@@ -75,8 +75,8 @@
         mode: '0644'
     
     - name: Copy serial port configuration
-      template:
-        src: serial_port_configuration.j2
+      ansible.builtin.copy:
+        content: KERNEL == "mhi_DUN", MODE = "0660", GROUP = "measurex"
         dest: /etc/udev/rules.d/99-mhi.rules
         owner: "root"
         group: "root"
