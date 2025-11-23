@@ -168,7 +168,6 @@ class ContextController:
         try:
             items = line.split(":", 1)[1].split(",")
             return {
-                "operator_name": items[1].replace('"', '').strip(),
                 "band": items[2].replace('"', '').strip(),
             }
         except Exception:
@@ -196,8 +195,8 @@ class ContextController:
             rssi = int(line.split(":")[1].split(",")[0])
             ber = int(line.split(":")[1].split(",")[1])
             return {
-                "rssi": "Not known or not detectable" if rssi == 99 else rssi * 2 - 113,
-                "ber": "Not known or not detectable" if ber == 99 else ber
+                "rssi": 99 if rssi == 99 else rssi * 2 - 113,
+                "ber": ber
                 }
         except Exception:
             return {}
@@ -222,7 +221,7 @@ class ContextController:
         ctx.update(self.parse_qeng_servingcell(qeng))
         print(ctx)
 
-        # Info RAT + operator
+        # Info operative band frequency
         qnw = self.send_at("AT+QNWINFO")
         ctx.update(self.parse_qnwinfo(qnw))
 
