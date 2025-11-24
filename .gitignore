@@ -20,4 +20,7 @@ build/
 dist/
 *.egg-info
 
-Icon
+Icon
+
+coordinatorConfig.yaml
+grafana/datasources/datasource.yaml

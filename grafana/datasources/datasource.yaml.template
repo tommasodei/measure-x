@@ -14,4 +14,4 @@ datasources:
       authType: auth-username-password
       username: measurex
     secureJsonData:
-      password: measurex
+      password: ${password}
