@@ -95,5 +95,12 @@ This is another example, where energy is measured in the presence of some CBR tr
 
 After having started the energy measurement, it can be stopped by using a DELETE request using the measurement identifier provided back by the system.
 
+## Traffic Tracks Distribution
+The new release introduces a way to distribute a traffic track automatically to all the probes.
+Place the `track_to_distribute.pcap` file in the `tracks_to_distribute` directory, then launch the following command from `yaml_ansible` directory:
+```
+ansible-playbook -i [your_inventory] track_distribution.yaml
+```
+
 
 

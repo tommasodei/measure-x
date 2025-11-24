@@ -1,29 +1,101 @@
 import subprocess
+import time
+import json
+import getpass
+import sys
+from string import Template
 
-password = input("Password for MongoDB user 'measurex': ")
+def generate_from_template(template_path, output_path, context):
+    """Read a template, substitute variables and write the final file"""
+    try:
+        with open(template_path, 'r') as f:
+            src = Template(f.read())
+            result = src.substitute(context)
+        
+        with open(output_path, 'w') as f:
+            f.write(result)
+        print(f"Generated: {output_path}")
+        
+    except FileNotFoundError:
+        print(f"Error: Template '{template_path}' not found")
+        sys.exit(1)
+    except KeyError as e:
+        print(f"Error: field {e} not provided in context")
+        sys.exit(1)
 
-#Update of config files
-with open('grafana/datasources/datasource.yaml', 'r') as f:
-    content = f.read().replace('password: measurex', f'password: {password}')
-with open('grafana/datasources/datasource.yaml', 'w') as f:
-    f.write(content)
+def wait_for_mongo(container_name, max_retries=30):
+    """Polls the container until Mongo is ready to accept connections"""
+    print(f"Waiting for MongoDB ({container_name}) to be ready...")
+    for i in range(max_retries):
+        try:
+            subprocess.check_call(
+                ["docker", "exec", container_name, "mongosh", "--eval", "db.runCommand('ping')"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            print("MongoDB is up and running!")
+            return
+        except subprocess.CalledProcessError:
+            time.sleep(2)
+    
+    print("Timeout waiting for MongoDB.")
+    sys.exit(1)
 
-with open('coordinatorConfig.yaml', 'r') as f:
-    content = f.read().replace('password: measurex', f'password: {password}')
-with open('coordinatorConfig.yaml', 'w') as f:
-    f.write(content)
+print("Please provide configuration details.")
+password = getpass.getpass("Password for MongoDB user 'measurex': ")
 
-#Starting of both mongo and grafana containers
-subprocess.run(['docker-compose', 'up', '-d', '--build'])
+if not password:
+    print("Password cannot be empty.")
+    sys.exit(1)
 
-input("Press Enter to create the MongoDB measurex user")
+data_context = {
+    'password': password
+}
 
-#Creation of measurex user on mongo
+generate_from_template(
+    'grafana/datasources/datasource.yaml.template', 
+    'grafana/datasources/datasource.yaml', 
+    data_context
+)
+
+generate_from_template(
+    'coordinatorConfig.yaml.template', 
+    'coordinatorConfig.yaml', 
+    data_context
+)
+
+print("Starting Docker containers...")
+try:
+    subprocess.run(['docker', 'compose', 'up', '-d', '--build'], check=True)
+except subprocess.CalledProcessError:
+    print("Failed to start Docker Compose.")
+    sys.exit(1)
+
+CONTAINER_NAME = "measure-x-mongo"
+wait_for_mongo(CONTAINER_NAME)
+
+safe_password = json.dumps(password)
+safe_user = json.dumps('measurex')
+
+mongo_script = f"""
+    let user = {safe_user};
+    let pwd = {safe_password};
+    let roles = [{{ role: 'readWrite', db: 'measurex' }}];
+
+    if (db.getUser(user)) {{
+        db.updateUser(user, {{ pwd: pwd, roles: roles }});
+        print('User ' + user + ' updated successfully.');
+    }} else {{
+        db.createUser({{ user: user, pwd: pwd, roles: roles }});
+        print('User ' + user + ' created successfully.');
+    }}
+"""
+
+print("Configuring MongoDB user...")
 subprocess.run([
-    "docker", "exec", "measure-x-mongo",
+    "docker", "exec", CONTAINER_NAME,
     "mongosh", "admin",
-    "--eval",
-    f'db.createUser({{ user: "measurex", pwd: "{password}", roles: [{{ role: "readWrite", db: "measurex" }}] }})'
-])
+    "--eval", mongo_script
+], check=True)
 
-print("MongoDB user created successfully!")
+print("\nEnvironment setup complete!")
