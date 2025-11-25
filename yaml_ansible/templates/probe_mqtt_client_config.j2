@@ -1,0 +1,26 @@
+#Configuration file for the Probe MQTT module
+
+mqtt_client:
+  clean_session: True # Auto-eliminazione delle subscriptions
+  mosquitto_certificate_path: mosquitto.crt
+
+  broker:
+    host: {{ mqtt_broker_host }}
+    port: {{ mqtt_broker_port }}
+    keep_alive: 60
+    login: True # per l'utilizzo delle credenziali, metti a True. L'ESP32 non supporta le credenziali!
+
+  credentials:
+    username: {{ mqtt_client_username }}
+    password: {{ mqtt_client_password }}
+
+  subscription_topics:
+    - "probes/PROBE_ID/commands"
+
+  publishing:
+    status_topic: "probes/PROBE_ID/status"
+    results_topic: "probes/PROBE_ID/results"
+    contexts_topic: "probes/PROBE_ID/contexts"
+    error_topic: "probes/PROBE_ID/errors"
+    qos: 1
+    retain: False
