@@ -104,12 +104,12 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.2.1",
+      "pluginVersion": "12.3.0",
       "targets": [
         {
-          "collection": "measurements",
+          "collection": "results",
           "queryLanguage": "json",
-          "queryText": "[\n  {\n    \"$match\": {\n        \"$expr\": {\n            \"$and\": [\n              {\n                \"$gt\": [\"$start_time\", {\"$divide\": [{ \"$toLong\": \"$__from\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$start_time\", {\"$divide\": [{ \"$toLong\": \"$__to\" },1000]}]\n              },\n              {\n                \"$gt\": [\"$stop_time\", {\"$divide\": [{ \"$toLong\": \"$__from\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$stop_time\", {\"$divide\": [{ \"$toLong\": \"$__to\" },1000]}]\n              },\n              {\n                \"$lt\": [\"$start_time\", \"$stop_time\"]\n              },\n              {  \n                \"$eq\": [\"$type\", \"iperf\"]\n              }\n            ]\n        }\n    }\n  },\n  {\n    \"$lookup\": {\n        \"from\": \"results\",\n        \"localField\": \"results\",\n        \"foreignField\": \"_id\",\n        \"as\": \"resultsData\"\n    }\n  },\n  {\n    \"$unwind\": \"$resultsData\"\n  },\n  {\n    \"$project\": {\n        \"_id\": 0,\n        \"time\": {\"$toDate\": {\"$multiply\": [\"$start_time\", 1000]}},\n        \"avg_speed\": \"$resultsData.avg_speed\"\n    }\n  },\n  {\n    \"$sort\": {\"time\": 1}\n  }\n]",
+          "queryText": "[\n  {\n    \"$match\": {\n      \"$and\": [\n        { \"type\": \"iperf\" },\n        {\n          \"$expr\": {\n            \"$and\": [\n              {\n                \"$gte\": [\n                  \"$timestamp_iso\",\n                  {\n                    \"$dateTrunc\": {\n                      \"date\": { \"$toDate\": { \"$toLong\": \"$__from\" } },\n                      \"unit\": \"second\"\n                    }\n                  }\n                ]\n              },\n              {\n                \"$lt\": [\n                  \"$timestamp_iso\",\n                  {\n                    \"$dateTrunc\": {\n                      \"date\": { \"$toDate\": { \"$toLong\": \"$__to\" } },\n                      \"unit\": \"second\"\n                    }\n                  }\n                ]\n              }\n            ]\n          }\n        }\n      ]\n    }\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"time\": \"$timestamp_iso\",  \n      \"avg_speed\": 1\n    }\n  },\n  {\n    \"$sort\": { \"time\": 1 }\n  }\n]",
           "queryType": "table",
           "refId": "A"
         }
@@ -199,12 +199,12 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.2.1",
+      "pluginVersion": "12.3.0",
       "targets": [
         {
-          "collection": "measurements",
+          "collection": "results",
           "queryLanguage": "json",
-          "queryText": "[\n  {\n    \"$match\": {\n        \"$expr\": {\n            \"$and\": [\n              {\n                \"$gt\": [\"$start_time\", {\"$divide\": [{ \"$toLong\": \"$__from\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$start_time\", {\"$divide\": [{ \"$toLong\": \"$__to\" },1000]}]\n              },\n              {\n                \"$gt\": [\"$stop_time\", {\"$divide\": [{ \"$toLong\": \"$__from\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$stop_time\", {\"$divide\": [{ \"$toLong\": \"$__to\" },1000]}]\n              },\n              {\n                \"$lt\": [\"$start_time\", \"$stop_time\"]\n              },\n              { \n                \"$eq\": [\"$type\", \"ping\"]\n              }\n            ]\n        }\n    }\n  },\n  {\n    \"$lookup\": {\n        \"from\": \"results\",\n        \"localField\": \"results\",\n        \"foreignField\": \"_id\",\n        \"as\": \"resultsData\"\n    }\n  },\n  {\n    \"$unwind\": \"$resultsData\"\n  },\n  {\n    \"$project\": {\n        \"_id\": 0,\n        \"time\": {\"$toDate\": {\"$multiply\": [\"$start_time\", 1000]}},\n        \"rtt_avg\": \"$resultsData.rtt_avg\"\n    }\n  },\n  {\n    \"$sort\": {\"time\": 1}\n  }\n]",
+          "queryText": "[\n  {\n    \"$match\": {\n      \"$and\": [\n        { \"type\": \"ping\" },\n        {\n          \"$expr\": {\n            \"$and\": [\n              {\n                \"$gte\": [\n                  \"$timestamp_iso\",\n                  {\n                    \"$dateTrunc\": {\n                      \"date\": { \"$toDate\": { \"$toLong\": \"$__from\" } },\n                      \"unit\": \"second\"\n                    }\n                  }\n                ]\n              },\n              {\n                \"$lt\": [\n                  \"$timestamp_iso\",\n                  {\n                    \"$dateTrunc\": {\n                      \"date\": { \"$toDate\": { \"$toLong\": \"$__to\" } },\n                      \"unit\": \"second\"\n                    }\n                  }\n                ]\n              }\n            ]\n          }\n        }\n      ]\n    }\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"time\": \"$timestamp_iso\",  \n      \"rtt_avg\": 1\n    }\n  },\n  {\n    \"$sort\": { \"time\": 1 }\n  }\n]",
           "queryType": "table",
           "refId": "A"
         }
@@ -295,12 +295,12 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.2.1",
+      "pluginVersion": "12.3.0",
       "targets": [
         {
-          "collection": "measurements",
+          "collection": "results",
           "queryLanguage": "json",
-          "queryText": "[\n  {\n    \"$match\": {\n        \"$expr\": {\n            \"$and\": [\n              {\n                \"$gt\": [\"$start_time\", {\"$divide\": [{ \"$toLong\": \"$__from\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$start_time\", {\"$divide\": [{ \"$toLong\": \"$__to\" },1000]}]\n              },\n              {\n                \"$gt\": [\"$stop_time\", {\"$divide\": [{ \"$toLong\": \"$__from\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$stop_time\", {\"$divide\": [{ \"$toLong\": \"$__to\" },1000]}]\n              },\n              {  \n                \"$lt\": [\"$start_time\", \"$stop_time\"]\n              },\n              {\n                \"$eq\": [\"$type\", \"aoi\"]\n              }\n            ]\n        }\n    }\n  },\n  {\n    \"$lookup\": {\n        \"from\": \"results\",\n        \"localField\": \"results\",\n        \"foreignField\": \"_id\",\n        \"as\": \"resultsData\"\n    }\n  },\n  {\n    \"$unwind\": \"$resultsData\"\n  },\n  {\n    \"$project\": {\n        \"_id\": 0,\n        \"time\": {\"$toDate\": {\"$multiply\": [\"$start_time\", 1000]}},\n        \"max_aoi\": \"$resultsData.max\"\n    }\n  },\n  {\n    \"$sort\": {\"time\": 1}\n  }\n]",
+          "queryText": "[\n  {\n    \"$match\": {\n      \"$and\": [\n        { \"type\": \"aoi\" },\n        {\n          \"$expr\": {\n            \"$and\": [\n              {\n                \"$gte\": [\n                  \"$timestamp_iso\",\n                  {\n                    \"$dateTrunc\": {\n                      \"date\": { \"$toDate\": { \"$toLong\": \"$__from\" } },\n                      \"unit\": \"second\"\n                    }\n                  }\n                ]\n              },\n              {\n                \"$lt\": [\n                  \"$timestamp_iso\",\n                  {\n                    \"$dateTrunc\": {\n                      \"date\": { \"$toDate\": { \"$toLong\": \"$__to\" } },\n                      \"unit\": \"second\"\n                    }\n                  }\n                ]\n              }\n            ]\n          }\n        }\n      ]\n    }\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"time\": \"$timestamp_iso\",  \n      \"aoi_max\": 1\n    }\n  },\n  {\n    \"$sort\": { \"time\": 1 }\n  }\n]",
           "queryType": "table",
           "refId": "A"
         }
@@ -316,9 +316,13 @@
   "templating": {
     "list": []
   },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
   "title": "MeasureX",
-  "uid": null,
+  "uid": "4b798b18-ae75-4679-9e82-d123f5263b41",
   "version": 1
 }
