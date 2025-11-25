@@ -21,5 +21,6 @@ dist/
 *.egg-info
 
 Icon
+
 grafana/datasources/datasource.yaml
 coordinatorConfig.yaml
