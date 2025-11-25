@@ -22,8 +22,8 @@ services:
       GF_PROVISIONING_ENABLED: true
       GF_PATHS_PROVISIONING: /etc/grafana/provisioning
     volumes:
-      - ./grafana/datasources:/etc/grafana/provisioning/datasources
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:Z
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:Z
       - grafana-storage:/var/lib/grafana 
     depends_on:
       - mongodb
