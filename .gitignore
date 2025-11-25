@@ -22,5 +22,5 @@ dist/
 
 Icon
 
-coordinatorConfig.yaml
 grafana/datasources/datasource.yaml
+coordinatorConfig.yaml
