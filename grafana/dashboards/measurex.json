@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 0,
+  "id": 3,
   "links": [],
   "panels": [
     {
@@ -48,7 +48,7 @@
       },
       "id": 10,
       "options": {
-        "afterRender": "// Wait 100ms to ensure the HTML has been rendered\nsetTimeout(() => {\n\n  const rows = document.querySelectorAll('.clickable-row');\n\n  rows.forEach(row => {\n    row.onclick = function () {\n      const id = this.getAttribute('data-id');\n\n      if (context && context.grafana && context.grafana.locationService) {\n        context.grafana.locationService.partial({\n          'var-selected_msm_id': id\n        }, true);\n      } else {\n        console.error(\"Errore: Impossibile aggiornare la variabile (LocationService mancante)\");\n        alert(\"Errore Grafana: controlla la console\");\n      }\n    };\n\n  });\n\n  console.log(\"Tabella inizializzata. Righe trovate:\", rows.length);\n\n}, 150); ",
+        "afterRender": "// Wait 100ms to ensure the HTML has been rendered\nsetTimeout(() => {\n\n  const rows = document.querySelectorAll('.clickable-row');\n\n  rows.forEach(row => {\n    row.onclick = function () {\n      const id = this.getAttribute('data-id');\n\n      if (context && context.grafana && context.grafana.locationService) {\n        context.grafana.locationService.partial({\n          'var-selected_msm_id': id\n        }, true);\n      } else {\n        console.error(\"Error: variable update failed (LocationService is missing)\");\n        alert(\"Grafana Error: check the browser console\");\n      }\n    };\n\n  });\n\n}, 150); ",
         "content": "<div class=\"measure-list-container\">\n  <table class=\"measure-table\" id=\"my-aoi-table\">\n    <thead>\n      <tr>\n        <th>Time</th>\n        <th>Type</th>\n      </tr>\n    </thead>\n    <tbody>\n      {{#each data}}\n      <tr class=\"clickable-row row-{{this.type}}\" data-id=\"{{this.id}}\">\n        <td>{{date this.time \"YYYY-MM-DD HH:mm:ss\"}}</td>\n        <td><span class=\"badge badge-{{this.type}}\">{{this.type}}</span></td>\n      </tr>\n      {{/each}}\n    </tbody>\n  </table>\n</div>",
         "contentPartials": [],
         "defaultContent": "The query didn't return any results.\n",
@@ -136,7 +136,7 @@
               "mode": "off"
             }
           },
-          "displayName": "max_aoi",
+          "displayName": "AoI",
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -180,7 +180,7 @@
         {
           "collection": "results",
           "queryLanguage": "json",
-          "queryText": "[\n  {\n    \"$match\": {\n      \"$expr\": {\n        \"$and\": [\n          { \"$eq\": [\"$type\", \"aoi\"] },\n          { \"$eq\": [{ \"$toString\": \"$msm_id\" }, \"${selected_msm_id:raw}\"] }\n        ]\n      }\n    }\n  },\n  { \"$unwind\": \"$aois\" },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"time\": { \"$toDate\": { \"$multiply\": [\"$aois.Timestamp\", 1000] } },\n      \"AoI_Istantaneo\": \"$aois.AoI\"\n    }\n  },\n  { \"$sort\": { \"time\": 1 } }\n]",
+          "queryText": "[\n  {\n    \"$match\": {\n      \"$expr\": {\n        \"$eq\": [{ \"$toString\": \"$msm_id\" }, \"${selected_msm_id:raw}\"] \n      }\n    }\n  },\n  { \"$unwind\": \"$aois\" },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"time\": { \"$toDate\": { \"$multiply\": [\"$aois.Timestamp\", 1000] } },\n      \"instant_AoI\": \"$aois.AoI\"\n    }\n  },\n  { \"$sort\": { \"time\": 1 } }\n]",
           "queryType": "table",
           "refId": "A"
         }
@@ -240,7 +240,7 @@
         {
           "collection": "results",
           "queryLanguage": "json",
-          "queryText": "[\n  {\n    \"$match\": {\n      \"$expr\": {\n        \"$and\": [\n          { \"$eq\": [\"$type\", \"aoi\"] },\n          { \"$eq\": [{ \"$toString\": \"$msm_id\" }, \"${selected_msm_id:raw}\"] }\n        ]\n      }\n    }\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"Max AoI\": \"$aoi_max\",\n      \"Min AoI\": \"$aoi_min\"\n    }\n  }\n]",
+          "queryText": "[\n  {\n    \"$match\": {\n      \"$expr\": {\n        \"$eq\": [{ \"$toString\": \"$msm_id\" }, \"${selected_msm_id:raw}\"] \n      }\n    }\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"Max AoI\": \"$aoi_max\",\n      \"Min AoI\": \"$aoi_min\"\n    }\n  }\n]",
           "queryType": "table",
           "refId": "A"
         }
@@ -345,7 +345,7 @@
         {
           "collection": "results",
           "queryLanguage": "json",
-          "queryText": "[\n  {\n    \"$match\": {\n      \"$expr\": {\n        \"$and\": [\n          { \"$eq\": [\"$type\", \"ping\"] },\n          { \"$eq\": [{ \"$toString\": \"$msm_id\" }, \"${selected_msm_id:raw}\"] }\n        ]\n      }\n    }\n  },\n  { \"$unwind\": \"$icmp_replies\" },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"time\": {\n        \"$toDate\": {\n          \"$add\": [\n            { \"$toLong\": \"$timestamp_iso\" },\n            { \"$multiply\": [\"$icmp_replies.icmp_seq\", 1000] }\n          ]\n        }\n      },\n      \"RTT_ms\": \"$icmp_replies.time\"\n    }\n  },\n  { \"$sort\": { \"time\": 1 } }\n]",
+          "queryText": "[\n  {\n    \"$match\": {\n      \"$expr\": {\n        \"$eq\": [{ \"$toString\": \"$msm_id\" }, \"${selected_msm_id:raw}\"]\n      }\n    }\n  },\n  { \"$unwind\": \"$icmp_replies\" },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"time\": {\n        \"$toDate\": {\n          \"$add\": [\n            { \"$toLong\": \"$timestamp_iso\" },\n            { \"$multiply\": [\"$icmp_replies.icmp_seq\", 1000] }\n          ]\n        }\n      },\n      \"RTT_ms\": \"$icmp_replies.time\"\n    }\n  },\n  { \"$sort\": { \"time\": 1 } }\n]",
           "queryType": "table",
           "refId": "A"
         }
@@ -419,7 +419,7 @@
         {
           "collection": "results",
           "queryLanguage": "json",
-          "queryText": "[\n  {\n    \"$match\": {\n      \"$expr\": {\n        \"$and\": [\n          { \"$eq\": [\"$type\", \"ping\"] },\n          { \"$eq\": [{ \"$toString\": \"$msm_id\" }, \"${selected_msm_id:raw}\"] }\n        ]\n      }\n    }\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"Avg RTT\": \"$rtt_avg\",\n      \"Max RTT\": \"$rtt_max\",\n      \"Min RTT\": \"$rtt_min\",\n      \"Packet Loss\": \"$packets_loss_rate\"\n    }\n  }\n]",
+          "queryText": "[\n  {\n    \"$match\": {\n      \"$expr\": {\n        \"$eq\": [{ \"$toString\": \"$msm_id\" }, \"${selected_msm_id:raw}\"] \n      }\n    }\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"Avg RTT\": \"$rtt_avg\",\n      \"Max RTT\": \"$rtt_max\",\n      \"Min RTT\": \"$rtt_min\",\n      \"Packet Loss\": \"$packets_loss_rate\"\n    }\n  }\n]",
           "queryType": "table",
           "refId": "A"
         }
@@ -524,7 +524,7 @@
         {
           "collection": "results",
           "queryLanguage": "json",
-          "queryText": "[\n  {\n    \"$match\": {\n      \"$expr\": {\n        \"$and\": [\n          { \"$eq\": [\"$type\", \"iperf\"] },\n          { \"$eq\": [{ \"$toString\": \"$msm_id\" }, \"${selected_msm_id:raw}\"] }\n        ]\n      }\n    }\n  },\n  { \"$unwind\": \"$full_result.intervals\" },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"time\": {\n        \"$toDate\": {\n          \"$add\": [\n            { \"$toLong\": { \"$toDate\": \"$timestamp_iso\" } },\n            { \"$multiply\": [{ \"$toDouble\": \"$full_result.intervals.sum.start\" }, 1000] }\n          ]\n        }\n      },\n      \"Mbps\": {\n        \"$divide\": [{ \"$toDouble\": \"$full_result.intervals.sum.bits_per_second\" }, 1000000]\n      }\n    }\n  },\n  { \"$sort\": { \"time\": 1 } }\n]",
+          "queryText": "[\n  {\n    \"$match\": {\n      \"$expr\": {\n        \"$eq\": [{ \"$toString\": \"$msm_id\" }, \"${selected_msm_id:raw}\"] \n      }\n    }\n  },\n  { \"$unwind\": \"$full_result.intervals\" },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"time\": {\n        \"$toDate\": {\n          \"$add\": [\n            { \"$toLong\": { \"$toDate\": \"$timestamp_iso\" } },\n            { \"$multiply\": [{ \"$toDouble\": \"$full_result.intervals.sum.start\" }, 1000] }\n          ]\n        }\n      },\n      \"Mbps\": {\n        \"$divide\": [{ \"$toDouble\": \"$full_result.intervals.sum.bits_per_second\" }, 1000000]\n      }\n    }\n  },\n  { \"$sort\": { \"time\": 1 } }\n]",
           "queryType": "table",
           "refId": "A"
         }
@@ -598,7 +598,7 @@
         {
           "collection": "results",
           "queryLanguage": "json",
-          "queryText": "[\n  {\n    \"$match\": {\n      \"$expr\": {\n        \"$and\": [\n          { \"$eq\": [\"$type\", \"iperf\"] },\n          { \"$eq\": [{ \"$toString\": \"$msm_id\" }, \"${selected_msm_id:raw}\"] }\n        ]\n      }\n    }\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"Average Speed\": \"$avg_speed\",\n      \"Total Data\": \"$bytes_received\"\n    }\n  }\n]",
+          "queryText": "[\n  {\n    \"$match\": {\n      \"$expr\": {\n        \"$eq\": [{ \"$toString\": \"$msm_id\" }, \"${selected_msm_id:raw}\"] \n      }\n    }\n  },\n  {\n    \"$project\": {\n      \"_id\": 0,\n      \"Average Speed\": \"$avg_speed\",\n      \"Total Data\": \"$bytes_received\"\n    }\n  }\n]",
           "queryType": "table",
           "refId": "A"
         }
@@ -642,5 +642,5 @@
   "timezone": "browser",
   "title": "MeasureX",
   "uid": "4b798b18-ae75-4679-9e82-d123f5263b4134",
-  "version": 2
+  "version": 5
 }
