@@ -207,7 +207,8 @@
                 "value": 0
               }
             ]
-          }
+          },
+          "unit": "ms"
         },
         "overrides": []
       },
@@ -642,5 +643,5 @@
   "timezone": "browser",
   "title": "MeasureX",
   "uid": "4b798b18-ae75-4679-9e82-d123f5263b4134",
-  "version": 5
+  "version": 6
 }
